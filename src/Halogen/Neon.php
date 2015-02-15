@@ -1,13 +1,8 @@
 <?php
 
-/**
- * This file is part of the Nette Framework (http://nette.org)
- * Copyright (c) 2004 David Grudl (http://davidgrudl.com)
- */
+namespace Webapper\Halogen;
 
-namespace Nette\Neon;
-
-use Nette;
+use Webapper;
 
 
 /**
@@ -20,11 +15,10 @@ class Neon
 	const BLOCK = Encoder::BLOCK;
 	const CHAIN = '!!chain';
 
-
 	/**
 	 * Returns the NEON representation of a value.
-	 * @param  mixed
-	 * @param  int
+	 * @param  mixed $var
+	 * @param  int $options
 	 * @return string
 	 */
 	public static function encode($var, $options = NULL)
@@ -33,10 +27,9 @@ class Neon
 		return $encoder->encode($var, $options);
 	}
 
-
 	/**
 	 * Decodes a NEON string.
-	 * @param  string
+	 * @param  string $input
 	 * @return mixed
 	 */
 	public static function decode($input)
@@ -44,5 +37,4 @@ class Neon
 		$decoder = new Decoder;
 		return $decoder->decode($input);
 	}
-
 }

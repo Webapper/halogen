@@ -1,13 +1,8 @@
 <?php
 
-/**
- * This file is part of the Nette Framework (http://nette.org)
- * Copyright (c) 2004 David Grudl (http://davidgrudl.com)
- */
+namespace Webapper\Halogen;
 
-namespace Nette\Neon;
-
-use Nette;
+use Webapper;
 
 
 /**
@@ -19,11 +14,10 @@ class Encoder
 {
 	const BLOCK = 1;
 
-
 	/**
 	 * Returns the NEON representation of a value.
-	 * @param  mixed
-	 * @param  int
+	 * @param  mixed $var
+	 * @param  int $options
 	 * @return string
 	 */
 	public function encode($var, $options = NULL)
@@ -80,5 +74,4 @@ class Encoder
 			return json_encode($var, PHP_VERSION_ID >= 50400 ? JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES : 0);
 		}
 	}
-
 }

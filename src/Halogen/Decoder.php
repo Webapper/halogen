@@ -1,13 +1,8 @@
 <?php
 
-/**
- * This file is part of the Nette Framework (http://nette.org)
- * Copyright (c) 2004 David Grudl (http://davidgrudl.com)
- */
+namespace Webapper\Halogen;
 
-namespace Nette\Neon;
-
-use Nette;
+use Webapper;
 
 
 /**
@@ -55,11 +50,9 @@ class Decoder
 	/** @var int */
 	private $pos;
 
-
-
 	/**
 	 * Decodes a NEON string.
-	 * @param  string
+	 * @param  string $input
 	 * @return mixed
 	 */
 	public function decode($input)
@@ -94,10 +87,9 @@ class Decoder
 		return $res;
 	}
 
-
 	/**
-	 * @param  string  indentation (for block-parser)
-	 * @param  mixed
+	 * @param  string $indent indentation (for block-parser)
+	 * @param  mixed $result
 	 * @return array
 	 */
 	private function parse($indent, $result = NULL, $key = NULL, $hasKey = FALSE)
@@ -285,7 +277,6 @@ class Decoder
 		return $mainResult;
 	}
 
-
 	private function addValue(& $result, $key, $value)
 	{
 		if ($key === NULL) {
@@ -296,7 +287,6 @@ class Decoder
 			$result[$key] = $value;
 		}
 	}
-
 
 	private function cbString($m)
 	{
@@ -319,7 +309,6 @@ class Decoder
 		}
 	}
 
-
 	private function error($message = "Unexpected '%s'")
 	{
 		$last = isset($this->tokens[$this->pos]) ? $this->tokens[$this->pos] : NULL;
@@ -330,5 +319,4 @@ class Decoder
 		$token = $last ? str_replace("\n", '<new line>', substr($last[0], 0, 40)) : 'end';
 		throw new Exception(str_replace('%s', $token, $message) . " on line $line, column $col.");
 	}
-
 }
