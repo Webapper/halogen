@@ -1,7 +1,7 @@
 <?php
 
-require __DIR__ . '/Halogen/Decoder.php';
-require __DIR__ . '/Halogen/Encoder.php';
-require __DIR__ . '/Halogen/Entity.php';
-require __DIR__ . '/Halogen/Exception.php';
-require __DIR__ . '/Halogen/Neon.php';
+require __DIR__ . '/Neon/Decoder.php';
+require __DIR__ . '/Neon/Encoder.php';
+require __DIR__ . '/Neon/Entity.php';
+require __DIR__ . '/Neon/Exception.php';
+require __DIR__ . '/Neon/Neon.php';
