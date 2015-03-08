@@ -1,6 +1,6 @@
 <?php
 
-namespace Webapper\Halogen;
+namespace Webapper\Neon;
 
 use Webapper;
 
