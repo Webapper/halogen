@@ -24,7 +24,7 @@ class Processor
 	 */
 	protected $halogen;
 
-	public function __construct(Halogen $halogen, $content, $unindent=true)
+	public function __construct(Halogen $halogen, $content, $unindent=false)
 	{
 		$this->halogen = $halogen;
 
@@ -32,18 +32,29 @@ class Processor
 		$content = preg_replace($reLinebreaks, "\n", $content);
 		$content = rtrim($content);
 
+		$content = $this->parseContent($content);
 		$this->itemContent = $content;
 
 		// captures:
 		//                  |-begin-|---------+------------------------ block without trailing line-break OR empty line ----------------------------------|---- end -----|
 		//                  |       |         |---+--------------------------------- block without trailing line-break ---------------------------------+-|              |
-		//                  |       |         |any|---+------------------------ content (can use escapes, quotes, braces) ------------------------------| |              |
-		//                  |       |         |   |   |--- block-open chars: '"{[( ----|---- check if escaped ----|---- block-close chars: '"}]) ----|  | |              |
+		//                  |       |         |any|--+------------------------ content (can use escapes, quotes, braces) -------------------------------| |              |
+		//                  |       |         |   |  |---- block-open chars: '"{[( ----|---- check if escaped ----|---- block-close chars: '"}]) ----|  | |              |
 		$reBlockMatcher = '%(?:^|\n)(?P<block>(.*?(?:((?<![\\\\])[\'"]|((\{)|(\[)|(\()))((?:.(?!(?<![\\\\])\3))*.?)(?(4)(?(5)\}|(?(6)\]|(?(7)\))))|\3))?)*)(?=\n+[\w# ]|$)%s';
 		$matches = null;
 		preg_match_all($reBlockMatcher, $content, $matches);
 
-		$this->container = $matches['block'];
+		$idx = 0;
+		foreach ($matches['block'] as $block) {
+			$key = $this->shiftKeyFrom($block);
+			if ($key === null) {
+				$this->container[$idx] = $block;
+				$idx++;
+			} else {
+				$this->container[$key] = $block;
+			}
+		}
+
 		if ($unindent) {
 			foreach ($this->container as $k=>$v) {
 				$this->container[$k] = $this->unindent($v, $k);
@@ -54,6 +65,35 @@ class Processor
 	public function getContainer()
 	{
 		return $this->container;
+	}
+
+	public function isSingle()
+	{
+		// detects any of "-"/":" followed by "\n + indent" and opening braces outside of a string-sequence
+		$reIsContainer = '%((?(?=(\s*)\-\s*\n\2\s+)(?P<array>\-)|(?(?=[\{\[\(])(?P<brace>[\{\[\(])|(?(?=(\s*)\:\s*\n\5\s+)(?P<block>\:)|(?(?=[\'"])([\'"])([^\'"\\\\]*(?:\\.[^\'"\\\\]*)*)\7|[^\'"])))))*%s';
+		$match = null;
+		preg_match($reIsContainer, $this->itemContent, $match);
+
+		return (!isset($match['brace']) and !isset($match['block']) and !isset($match['array']));
+	}
+
+	protected function parseContent($content)
+	{
+		return $content;
+	}
+
+	protected function shiftKeyFrom(&$content)
+	{
+		$reKey = '%^(-\s*)?(\w+)\:(.*)%';
+		$matches = null;
+		$key = null;
+
+		if (preg_match($reKey, $content, $matches)) {
+			$key = $matches[2];
+			$content = $matches[3];
+		}
+
+		return $key;
 	}
 
 	protected function unindent($content, $blockIdx)

@@ -25,7 +25,7 @@ abstract class Halogen implements \Reflector
 	protected $parent;
 
 	/**
-	 * @var array
+	 * @var [Halogen]
 	 */
 	protected $children = array();
 
@@ -40,6 +40,11 @@ abstract class Halogen implements \Reflector
 	protected $value;
 
 	/**
+	 * @var string
+	 */
+	protected $processorClass = 'Webapper\Halogen\Reflection\Processor';
+
+	/**
 	 * @param $content
 	 * @param Halogen $parent
 	 */
@@ -52,39 +57,55 @@ abstract class Halogen implements \Reflector
 	}
 
 	/**
-	 * Parses content, sets value, re-build content for processing it
+	 * @return string
 	 */
-	abstract protected function parseContent();
+	public function getProcessorClass()
+	{
+		return $this->processorClass;
+	}
+
+	/**
+	 * Used by {@link setProcessorClass}, void or throws ProcessorException
+	 * @param $processorClass
+	 * @throws ProcessorException
+	 */
+	protected function assertProcessorClass($processorClass)
+	{
+		if (is_a($processorClass, 'Webapper\Halogen\Reflection\Processor')) throw new ProcessorException('Argument $processorClass must contains a class derived from Webapper\Halogen\Reflection\Processor, "'.$processorClass.'" given.');
+	}
+
+	/**
+	 * @param $processorClass
+	 * @return $this
+	 */
+	public function setProcessorClass($processorClass)
+	{
+		$this->assertProcessorClass($processorClass);
+		$this->processorClass = $processorClass;
+
+		return $this;
+	}
+
+	/**
+	 * @return Processor
+	 */
+	protected function getProcessor()
+	{
+		$class = $this->processorClass;
+		$processor = new $class($this, $this->content);
+
+		return $processor;
+	}
 
 	protected function process()
 	{
-		$this->parseContent();
+		$processor = $this->getProcessor();
 
-		if ($this->content !== '') {
-			$processor = new Processor($this, $this->content, ($this->getParent() !== null));
+		if (!$processor->isSingle()) {
 			foreach ($processor->getContainer() as $idx=>$content) {
-				$key = $this->shiftKeyFrom($content);
-				if ($key !== null) {
-					// $this->children[$key] = feketemágia($content)
-				} else {
-					// $this->children[] = feketemágia($content)
-				}
+				// $this->children[$idx] = feketemágia($content)
 			}
 		}
-	}
-
-	protected function shiftKeyFrom(&$content)
-	{
-		$reKey = '%^(-\s*)?(\w+)\:(.*)%';
-		$matches = null;
-		$key = null;
-
-		if (preg_match($reKey, $content, $matches)) {
-			$key = $matches[2];
-			$content = $matches[3];
-		}
-
-		return $key;
 	}
 
 	/**
@@ -125,7 +146,7 @@ abstract class Halogen implements \Reflector
 	}
 
 	/**
-	 * @return [Halogen]|null returns null if item must have no childrens
+	 * @return [Halogen]|null returns null if item must have no children
 	 */
 	public function getChildren()
 	{
