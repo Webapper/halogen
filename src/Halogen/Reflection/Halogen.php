@@ -125,6 +125,9 @@ abstract class Halogen implements \Reflector
 		return $processor;
 	}
 
+	/**
+	 * @throws UnsupportedContent
+	 */
 	protected function process()
 	{
 		$processor = $this->getProcessor();
