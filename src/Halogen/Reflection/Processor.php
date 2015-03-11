@@ -24,7 +24,13 @@ class Processor
 	 */
 	protected $halogen;
 
-	public function __construct(Halogen $halogen, $content, $unindent=false)
+	/**
+	 * @param Halogen $halogen
+	 * @param string $content
+	 * @throws ProcessorException
+	 * @throws UnsupportedContent See {@parseContent}
+	 */
+	public function __construct(Halogen $halogen, $content)
 	{
 		$this->halogen = $halogen;
 
@@ -54,61 +60,57 @@ class Processor
 				$this->container[$key] = $block;
 			}
 		}
-
-		if ($unindent) {
-			foreach ($this->container as $k=>$v) {
-				$this->container[$k] = $this->unindent($v, $k);
-			}
-		}
 	}
 
+	/**
+	 * Gets the identified raw blocks or item
+	 * @return array
+	 */
 	public function getContainer()
 	{
 		return $this->container;
 	}
 
+	/**
+	 * Checks whether the original content passed to the constructor contains a single- or a block-like item or not
+	 * @return bool
+	 */
 	public function isSingle()
 	{
 		// detects any of "-"/":" followed by "\n + indent" and opening braces outside of a string-sequence
-		$reIsContainer = '%((?(?=(\s*)\-\s*\n\2\s+)(?P<array>\-)|(?(?=[\{\[\(])(?P<brace>[\{\[\(])|(?(?=(\s*)\:\s*\n\5\s+)(?P<block>\:)|(?(?=[\'"])([\'"])([^\'"\\\\]*(?:\\.[^\'"\\\\]*)*)\7|[^\'"])))))*%s';
+		$reIsContainer = '%((?(?=(\s*)\-\s*\n+\2\s+)(?P<array>\-)|(?(?=[\{\[\(])(?P<brace>[\{\[\(])|(?(?=(\s*)\:\s*\n+\5\s+)(?P<block>\:)|(?(?=[\'"])([\'"])([^\'"\\\\]*(?:\\.[^\'"\\\\]*)*)\7|[^\'"])))))*%s';
 		$match = null;
 		preg_match($reIsContainer, $this->itemContent, $match);
 
 		return (!isset($match['brace']) and !isset($match['block']) and !isset($match['array']));
 	}
 
+	/**
+	 * @param string $content
+	 * @return string
+	 * @throws UnsupportedContent When passed content is not supported by this Processor
+	 */
 	protected function parseContent($content)
 	{
 		return $content;
 	}
 
+	/**
+	 * Shifts out the key of the passed content, if any
+	 * @param $content
+	 * @return string
+	 */
 	protected function shiftKeyFrom(&$content)
 	{
-		$reKey = '%^(-\s*)?(\w+)\:(.*)%';
+		$reKey = '%(?:-\s*)?((?:(?(?=[\'"])([\'"])([^\'"\\]*(?:\\\\.[^\'"\\\\]*)*)\2)|[^:])*)\:(.*)%s';
 		$matches = null;
 		$key = null;
 
 		if (preg_match($reKey, $content, $matches)) {
-			$key = $matches[2];
-			$content = $matches[3];
+			$key = $matches[1];
+			$content = $matches[4];
 		}
 
 		return $key;
-	}
-
-	protected function unindent($content, $blockIdx)
-	{
-		$lines = explode("\n", $content);
-
-		foreach ($lines as $k=>$line) {
-			if (trim($line) === '') continue;
-			if ($line{0} !== "\t") throw new ProcessorException('Bad indention on '.$this->halogen->getPath().' in block #'.$blockIdx.' at line '.$k);
-
-			$lines[$k] = substr($line, 1);
-		}
-
-		$result = join("\n", $lines);
-
-		return $result;
 	}
 }

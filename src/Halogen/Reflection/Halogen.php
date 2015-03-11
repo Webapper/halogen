@@ -25,6 +25,11 @@ abstract class Halogen implements \Reflector
 	protected $parent;
 
 	/**
+	 * @var GenBank
+	 */
+	protected $genBank;
+
+	/**
 	 * @var [Halogen]
 	 */
 	protected $children = array();
@@ -45,15 +50,38 @@ abstract class Halogen implements \Reflector
 	protected $processorClass = 'Webapper\Halogen\Reflection\Processor';
 
 	/**
+	 * @var GenBank
+	 */
+	protected static $commonGenBank;
+
+	/**
 	 * @param $content
 	 * @param Halogen $parent
+	 * @param GenBank $genBank
 	 */
-	public function __construct($content, Halogen $parent=null)
+	public function __construct($content, Halogen $parent=null, GenBank $genBank=null)
 	{
 		$this->content = $content;
 		$this->parent = $parent;
+		$this->genBank = ($genBank or $parent->getGenBank()) or self::$commonGenBank;
 
 		$this->process();
+	}
+
+	/**
+	 * @param GenBank $genBank
+	 */
+	public static function registerGenBank(GenBank $genBank)
+	{
+		self::$commonGenBank = $genBank;
+	}
+
+	/**
+	 * @return GenBank
+	 */
+	protected function getGenBank()
+	{
+		return $this->genBank;
 	}
 
 	/**
@@ -103,7 +131,7 @@ abstract class Halogen implements \Reflector
 
 		if (!$processor->isSingle()) {
 			foreach ($processor->getContainer() as $idx=>$content) {
-				// $this->children[$idx] = feketemágia($content)
+				$this->children[$idx] = $this->getGenBank()->instanceGenByContent($content, $this);
 			}
 		}
 	}
